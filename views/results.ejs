@@ -1,0 +1,16 @@
+<%- include("partials/header") %>
+<div class="container">
+    <h1>Quotes</h1>
+    <ul>
+        <% quotes.forEach(quote => { %>
+            <li>
+                "<%= quote.quote %>" -
+                <a href="#" id="<%= quote.authorId %>">
+                    <%= quote.firstName %> <%= quote.lastName %>
+                </a>
+            </li>
+        <% }) %>
+    </ul>
+    <div id="authorInfo"></div>
+</div>
+<%- include("partials/footer") %>
