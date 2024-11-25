@@ -1,0 +1,21 @@
+<%- include("partials/header") %>
+<div class="container">
+    <h1>Find Your Favorite Quotes</h1>
+    <form action="/searchByKeyword">
+        <label for="keyword">Keyword:</label>
+        <input type="text" id="keyword" name="keyword" placeholder="Enter a keyword">
+        <button type="submit">Search by Keyword</button>
+    </form>
+    <form action="/searchByAuthor">
+        <label for="authorId">Author:</label>
+        <select id="authorId" name="authorId">
+            <% authors.forEach(author => { %>
+                <option value="<%= author.authorId %>">
+                    <%= author.firstName %> <%= author.lastName %>
+                </option>
+            <% }) %>
+        </select>
+        <button type="submit">Search by Author</button>
+    </form>
+</div>
+<%- include("partials/footer") %>
