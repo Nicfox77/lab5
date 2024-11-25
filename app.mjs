@@ -13,6 +13,9 @@ const conn = mysql.createPool({
 });
 
 const app = express();
+app.set('view engine', 'ejs');
+app.use(express.static('public'));
+
 
 // Example route to test database connection
 app.get('/dbTest', async (req, res) => {
