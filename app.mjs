@@ -1,11 +1,10 @@
 import express from 'express';
 import mysql from 'mysql2/promise';
 import dotenv from 'dotenv';
-
-const app = express();
 const PORT = 3005;
 
-// MySQL Connection Pool
+dotenv.config(); // Load environment variables
+
 const conn = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -13,19 +12,20 @@ const conn = mysql.createPool({
     database: process.env.DB_NAME
 });
 
-// Middleware
-app.use(express.static('public'));
-app.set('view engine', 'ejs');
+const app = express();
 
-// Test DB Connection
+// Example route to test database connection
 app.get('/dbTest', async (req, res) => {
     try {
         const [rows] = await conn.query('SELECT CURDATE()');
         res.send(rows);
     } catch (error) {
-        res.send('Database connection failed.');
+        res.status(500).send('Database connection failed.');
     }
 });
+
+
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
 
 // Root Route
 app.get('/', async (req, res) => {
