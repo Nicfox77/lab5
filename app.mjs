@@ -63,5 +63,3 @@ app.get('/api/author/:id', async (req, res) => {
     const [rows] = await conn.query(`SELECT * FROM q_authors WHERE authorId = ?`, [authorId]);
     res.json(rows[0]);
 });
-
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
