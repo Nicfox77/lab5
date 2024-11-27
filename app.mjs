@@ -64,24 +64,28 @@ app.get('/searchByKeyword', async (req, res) => {
 // Search by Author
 app.get('/searchByAuthor', async (req, res) => {
     let userAuthorId = req.query.authorId;
-    let sql = `SELECT quote, firstName, lastName, quote
+    let sql = `SELECT authorId, quote, firstName, lastName, quote
             FROM q_quotes
             NATURAL JOIN q_authors
             WHERE q_quotes.authorId = ?`;
     let sqlParams = [userAuthorId];
     const [rows] = await conn.query(sql, sqlParams);
+    console.log("Quotes Data:", rows);
+
     res.render('results', { quotes: rows });
 });
 
 // Search by Category
 app.get('/searchByCategory', async (req, res) => {
     let userCategory = req.query.category;
-    let sql = `SELECT quote, firstName, lastName, category
+    let sql = `SELECT authorId, quote, firstName, lastName, category
             FROM q_quotes
             NATURAL JOIN q_authors
             WHERE category = ?`;
     let sqlParams = [userCategory];
     const [rows] = await conn.query(sql, sqlParams);
+    console.log("Quotes Data:", rows);
+
     res.render('results', { quotes: rows });
 });
 
@@ -91,6 +95,8 @@ app.get('/api/author/:id', async (req, res) => {
             FROM q_authors
             WHERE authorId = ?`;
     let [rows] = await conn.query(sql, [authorId]);
+    console.log("Quotes Data:", rows);
+
     res.send(rows)
 });
 
