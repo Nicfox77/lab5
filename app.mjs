@@ -1,68 +1,99 @@
 import express from 'express';
 import mysql from 'mysql2/promise';
+import path from 'path';
 import dotenv from 'dotenv';
-const PORT = 3005;
 
-dotenv.config(); // Load environment variables
+// Load environment variables
+dotenv.config();
 
-const conn = mysql.createPool({
+const app = express();
+const PORT = 3000;
+
+// Middleware
+app.use(express.static(path.resolve('./public')));
+app.set('view engine', 'ejs');
+app.set('views', path.resolve('./views'));
+
+// Database Connection
+const conn = await mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
+    database: process.env.DB_NAME,
 });
 
-const app = express();
-app.set('view engine', 'ejs');
-app.use(express.static('public'));
-
-
-// Example route to test database connection
+// Test Database Connection
 app.get('/dbTest', async (req, res) => {
     try {
-        const [rows] = await conn.query('SELECT CURDATE()');
-        res.send(rows);
+        const [rows] = await conn.query('SELECT CURDATE() AS today');
+        res.send(rows[0].today);
     } catch (error) {
-        res.status(500).send('Database connection failed.');
+        console.error('Database connection failed:', error);
+        res.status(500).send('Database connection failed');
     }
 });
 
-
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-
-// Root Route
+// Landing Page
 app.get('/', async (req, res) => {
-    const [authors] = await conn.query('SELECT authorId, firstName, lastName FROM q_authors');
-    res.render('index', { authors });
+    try {
+        let authorSql = `SELECT authorId, firstName, lastName FROM q_authors ORDER BY lastName`;
+        let categorySql = `SELECT DISTINCT category FROM q_quotes ORDER BY category`;
+
+        const [authors] = await conn.query(authorSql);
+        const [categories] = await conn.query(categorySql);
+
+        res.render('index', { authors: authors, categories: categories });
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        res.status(500).send('Error fetching data');
+    }
 });
 
 // Search by Keyword
 app.get('/searchByKeyword', async (req, res) => {
-    const keyword = `%${req.query.keyword}%`;
-    const [rows] = await conn.query(
-        `SELECT quote, firstName, lastName FROM q_quotes 
-         NATURAL JOIN q_authors 
-         WHERE quote LIKE ?`,
-        [keyword]
-    );
+    let keyword = req.query.keyword;
+    let sql = `SELECT authorId, firstName, lastName, quote
+            FROM q_quotes
+            NATURAL JOIN q_authors
+            WHERE quote LIKE ?`;
+    let sqlParams = [`%${keyword}%`];
+    const [rows] = await conn.query(sql, sqlParams);
     res.render('results', { quotes: rows });
 });
 
 // Search by Author
 app.get('/searchByAuthor', async (req, res) => {
-    const authorId = req.query.authorId;
-    const [rows] = await conn.query(
-        `SELECT quote, firstName, lastName FROM q_quotes 
-         NATURAL JOIN q_authors 
-         WHERE authorId = ?`,
-        [authorId]
-    );
+    let userAuthorId = req.query.authorId;
+    let sql = `SELECT quote, firstName, lastName, quote
+            FROM q_quotes
+            NATURAL JOIN q_authors
+            WHERE q_quotes.authorId = ?`;
+    let sqlParams = [userAuthorId];
+    const [rows] = await conn.query(sql, sqlParams);
     res.render('results', { quotes: rows });
 });
 
-// Local API for Author Info
-app.get('/api/author/:id', async (req, res) => {
-    const authorId = req.params.id;
-    const [rows] = await conn.query(`SELECT * FROM q_authors WHERE authorId = ?`, [authorId]);
-    res.json(rows[0]);
+// Search by Category
+app.get('/searchByCategory', async (req, res) => {
+    let userCategory = req.query.category;
+    let sql = `SELECT quote, firstName, lastName, category
+            FROM q_quotes
+            NATURAL JOIN q_authors
+            WHERE category = ?`;
+    let sqlParams = [userCategory];
+    const [rows] = await conn.query(sql, sqlParams);
+    res.render('results', { quotes: rows });
 });
+
+app.get('/api/author/:id', async (req, res) => {
+    let authorId = req.params.id;
+    let sql = `SELECT *
+            FROM q_authors
+            WHERE authorId = ?`;
+    let [rows] = await conn.query(sql, [authorId]);
+    res.send(rows)
+});
+
+
+// Start Server
+app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));

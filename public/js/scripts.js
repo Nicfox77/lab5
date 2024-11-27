@@ -1,13 +1,18 @@
-document.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', async function () {
-        const authorId = this.id;
-        const response = await fetch(`/api/author/${authorId}`);
-        const author = await response.json();
+let authorLinks = document.querySelectorAll("a");
+for (authorLink of authorLinks) {
+    authorLink.addEventListener("click", getAuthorInfo);
+}
 
-        document.getElementById('authorInfo').innerHTML = `
-            <h3>${author.firstName} ${author.lastName}</h3>
-            <p>${author.bio}</p>
-            <img src="/img/${author.imageURL}" alt="${author.firstName}">
-        `;
-    });
-});
+async function getAuthorInfo(){
+    var myModal = new bootstrap.Modal(document.getElementById('authorModal'));
+    myModal.show();
+    let url = `/api/author/${this.id}`;
+    let response = await fetch(url);
+    let data = await response.json();
+    console.log(data);
+    let authorInfo = document.querySelector("#authorInfo");
+    authorInfo.innerHTML = `<h1>${data[0].firstName} ${data[0].lastName}</h1>`;
+    authorInfo.innerHTML += `<img src="${data[0].portrait}" width="200"><br>`;
+    authorInfo.innerHTML += `<p>${data[0].biography}</p>`;
+}
+
